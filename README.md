@@ -9,6 +9,7 @@
     + [2. Descriptive header](#2-descriptive-header)
     + [3. Offset header](#3-offset-header)
     + [4. Container storage](#4-container-storage)
+  * [Isomorphism to its binary representation](#isomorphism-to-its-binary-representation)
   * [Testing](#testing)
   * [Reference implementations](#reference-implementations)
   * [Sample Java source code](#sample-java-source-code)
@@ -111,6 +112,12 @@ The containers are then stored one after the other.
 - For array containers, we store a sorted list of 16-bit unsigned integer values corresponding to the array container. So if there are x values in the array container, 2 x bytes are used.
 - Bitset containers are stored using exactly 8KB using a bitset serialized with 64-bit words. Thus, for example, if value j is present, then word j/64 (starting at word 0) will have its (j%64) least significant bit set to 1 (starting at bit 0).
 - A run container is serialized as a 16-bit integer indicating the number of runs, followed by a pair of 16-bit values for each run. Runs are non-overlapping and sorted. Thus a run container with x runs will use 2 + 4 x bytes. Each pair of 16-bit values contains the starting index of the run followed by the length of the run minus 1. That is,  we interleave values and lengths, so that if you have the values 11,12,13,14,15, you store that as 11,4 where 4 means that beyond 11 itself, there are  4 contiguous values that follow. Other example: e.g., 1,10, 20,0, 31,2 would be a concise representation of 1, 2, ..., 11, 20, 31, 32, 33
+
+## Isomorphism to its binary representation
+
+A bitmap without run container can be stored in two different manners, with the SERIAL_COOKIE_NO_RUNCONTAINER cookie or with the SERIAL_COOKIE cookie. This means that you may find two different serialization for the exact same bitmap. Thus, in general, you may load a bitmap from disk, reading X bytes, and then write it back, using Y bytes, and X and Y could be different.
+
+In practice, implementations can ensure isomorphism by, for example, always serializing bitmaps without run containers with the SERIAL_COOKIE_NO_RUNCONTAINER cookie. Yet if you load serialization bitmaps from another source, you should pay attention.
 
 ## Testing
 
